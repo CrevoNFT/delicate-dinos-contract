@@ -5,6 +5,7 @@ import "./WhitelistManager.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol"; 
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol"; 
 import "@openzeppelin/contracts/security/Pausable.sol"; 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
@@ -16,7 +17,7 @@ import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
  * The storage location (baseURI) of collection items will be temporarily
  * centralized until the whole collection is minted.
  */
-contract DelicateDinos is Ownable, VRFConsumerBase, ERC721Pausable, IERC721Enumerable, WhitelistManager {
+contract DelicateDinos is Ownable, VRFConsumerBase, ERC721Pausable, IERC721Enumerable, WhitelistManager, ReentrancyGuard {
 
     // =========== Randomness ============= //
     bytes32 internal keyHash; 
@@ -70,12 +71,11 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721Pausable, IERC721Enume
     uint256 public mintFee = 0;
 
     /**
-    * Change to polygon mainnet when ready
-    * Network: Mumbai
-    * Chainlink VRF Coordinator address: ...
-    * LINK token address:                ...
-    * Key Hash: ...
-    */
+     * Network: Polygon (Matic) Mumbai Testnet
+     * Chainlink VRF Coordinator address: 0x8C7382F9D8f56b33781fE506E897a4F1e2d17255
+     * LINK token address:                0x326C977E6efc84E512bB9C30f76E30c160eD06FB
+     * Key Hash: 0x6e75b569a01ef56d18cab6a8e71e6600d6ce853834d4a5748b720d06f878b3a4
+     */
     constructor(
         address _vrfCoordinator,
         address _link,
@@ -90,11 +90,21 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721Pausable, IERC721Enume
         vrfFee = _fee;
     }
 
+    function withdraw() public onlyOwner nonReentrant {
+        (bool success, ) = payable(owner()).call{value: address(this).balance}("");
+        require(success);
+    }
+
     // ====================== MINTING ==================== //
 
     function activateWhitelistMode(bytes32 merkleRoot) public onlyOwner {
         resetWhitelist(merkleRoot);
+        useWhitelist = true;
     }
+    function deactivateWhitelistMode() public onlyOwner {
+        useWhitelist = false;
+    }
+
     function setFee(uint256 _fee) public onlyOwner {
         mintFee = _fee;
     }
