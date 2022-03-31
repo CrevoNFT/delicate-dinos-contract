@@ -12,7 +12,6 @@ typechain
 
 # foundry
 foundry/lib
-foundry/src/contracts
 
 # don't push the environment vars!
 .env
