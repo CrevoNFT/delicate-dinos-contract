@@ -1,6 +1,6 @@
 [default]
-src = 'src/contracts'
-test = 'src/test'
+src = 'src'
+test = 'test'
 out = 'out'
 libs = ['lib']
 
