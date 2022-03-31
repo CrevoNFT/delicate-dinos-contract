@@ -66,18 +66,12 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
 
     address public upgraderContract;
 
-    // ----------- errors
-    
-    error WithdrawFailed();
-    error NoWhitelistMint();
-    error NoPublicSale();
-    error WrongMintFee();
-    error NotOwnerOfBaseToken();
-    error NothingToClaimForTokenId();
-    error OnlyUpgraderContract();
-    error NotEnoughLink();
-    error NonExistentERC721Token();
-
+    /**
+     * Network: Polygon (Matic) Mumbai Testnet
+     * Chainlink VRF Coordinator address: 0x8C7382F9D8f56b33781fE506E897a4F1e2d17255
+     * LINK token address:                0x326C977E6efc84E512bB9C30f76E30c160eD06FB
+     * Key Hash: 0x6e75b569a01ef56d18cab6a8e71e6600d6ce853834d4a5748b720d06f878b3a4
+     */
     constructor(
         address _vrfCoordinator,
         address _link,
@@ -94,7 +88,7 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
 
     function withdraw() public onlyOwner {
         (bool success, ) = payable(owner()).call{value: address(this).balance}("");
-        if (!success) revert WithdrawFailed();
+        require(success, "could not withdraw");
     }
 
     function withdrawLink() public onlyOwner {
@@ -123,21 +117,21 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
     }
 
     function mintDinoWhitelisted(address addr, string memory name, bytes32[] calldata proof) public payable {
-        if (mintMode != MintMode.WHITE_LIST) revert NoWhitelistMint();
-        if (msg.value != mintFee) revert WrongMintFee();
+        require (mintMode == MintMode.WHITE_LIST, "currently no whitelisted mint");
+        require (msg.value == mintFee, "paid amount doesn't match mint fee");
         checkWhitelisted(proof);
         _requestMintDino(addr, name);
     }
 
     function mintDinoPublicSale(address addr, string memory name) public payable {
-        if (mintMode != MintMode.PUBLIC_SALE) revert NoPublicSale();
-        if (msg.value != mintFee) revert WrongMintFee();
+        require (mintMode == MintMode.PUBLIC_SALE, "currently no public sale");
+        require (msg.value == mintFee, "paid amount doesn't match mint fee");
         _requestMintDino(addr, name);
     }
 
     function mintDinoClaimed(uint256 tokenId, string memory name) public nonReentrant {
-        if (ownerOf(tokenId) != msg.sender) revert NotOwnerOfBaseToken();
-        if (!tokenIdCanClaim[tokenId]) revert NothingToClaimForTokenId();
+        require(ownerOf(tokenId) == msg.sender, "not the owner of the base token");
+        require(tokenIdCanClaim[tokenId], "base token has nothing to claim");
         _requestMintDino(msg.sender, name);
     }
 
@@ -172,7 +166,7 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
     }
 
     function updateTraits(uint256 tokenId, uint256 length, string memory name) external {
-        if (msg.sender != upgraderContract) revert OnlyUpgraderContract();
+        require(msg.sender == upgraderContract, "only the upgrader contract");
         tokenIdToDino[tokenId].name = name;
         tokenIdToDino[tokenId].length = length;
     }
@@ -183,7 +177,7 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
     * Requests randomness
     */
     function getRandomNumber() public returns (bytes32 requestId) {
-        if (LINK.balanceOf(address(this)) < vrfFee) revert NotEnoughLink();
+        require(LINK.balanceOf(address(this)) >= vrfFee, "Not enough LINK - fill contract with faucet");
         return requestRandomness(keyHash, vrfFee);
     }
 
@@ -215,7 +209,7 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
         override
         returns (string memory)
     {
-        if (!_exists(tokenId)) revert NonExistentERC721Token();
+        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
         string memory imageUrl = tokenIdHasArtwork[tokenId] ? string(abi.encodePacked(_ourBaseURI, "/", tokenId)) : PLACEHOLDER_IMAGE_URL;
         (uint256 length, string memory name) = getTraits(tokenId);
         return DelicateDinosMetadata.dinoURI(tokenId, imageUrl, length, name);

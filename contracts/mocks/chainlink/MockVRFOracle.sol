@@ -1,15 +1,15 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.8.0;
-import "../../polygon/PolygonVRFConsumerBase.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "@chainlink/contracts/src/v0.8/mocks/VRFCoordinatorMock.sol";
-import "../../../tests/solidity/Hevm.sol";
+// import "../../../tests/solidity/Hevm.sol";
 
 contract MockVRFOracle {
-    PolygonVRFConsumerBase internal vrfConsumer;
+    VRFConsumerBase internal vrfConsumer;
     VRFCoordinatorMock internal vrfCordinator;
 
     constructor(address _vrfConsumer, address _vrfCoordinator) {
-        vrfConsumer = PolygonVRFConsumerBase(_vrfConsumer);
+        vrfConsumer = VRFConsumerBase(_vrfConsumer);
         vrfCordinator = VRFCoordinatorMock(_vrfCoordinator);
     }
 

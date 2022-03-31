@@ -10,6 +10,9 @@ coverage
 coverage.json
 typechain
 
+# foundry
+foundry/lib
+
 # don't push the environment vars!
 .env
 
