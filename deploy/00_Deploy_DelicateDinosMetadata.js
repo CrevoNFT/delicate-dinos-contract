@@ -7,16 +7,13 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   // const chainId = 80001 // mumbai;
 
   const cfg = networkConfig[chainId]
-  const args = [cfg.vrfCoordinator, cfg.linkToken, cfg.keyHash, cfg.fee]
-  const metadataLibraryAddress = (await get("DelicateDinosMetadata")).address
-  const delicateDinos = await deploy("DelicateDinos", {
+  const delicateDinosMetadata = await deploy("DelicateDinosMetadata", {
     from: deployer,
-    args: args,
+    args: [],
     log: true,
-    libraries: { DelicateDinosMetadata: metadataLibraryAddress },
   })
 
-  log("Delicate Dinos deployed")
+  log("Delicate Dinos Metadata Library deployed")
 }
 
-module.exports.tags = ["all", "dinos_nft"]
+module.exports.tags = ["all", "dinos_metadata_library"]

@@ -21,6 +21,8 @@ const RINKEBY_RPC_URL =
 const KOVAN_RPC_URL = process.env.KOVAN_RPC_URL || "https://eth-kovan.alchemyapi.io/v2/your-api-key"
 const POLYGON_MAINNET_RPC_URL =
   process.env.POLYGON_MAINNET_RPC_URL || "https://polygon-mainnet.alchemyapi.io/v2/your-api-key"
+const POLYGON_MUMBAI_RPC_URL =
+  process.env.POLYGON_MAINNET_RPC_URL || "https://polygon-mumbai.g.alchemy.com/v2/your-api-key"
 const PRIVATE_KEY = process.env.PRIVATE_KEY
 // optional
 const MNEMONIC = process.env.MNEMONIC || "your mnemonic"
@@ -31,7 +33,7 @@ const POLYGONSCAN_API_KEY = process.env.POLYGONSCAN_API_KEY || "Your polygonscan
 const REPORT_GAS = process.env.REPORT_GAS || false
 
 module.exports = {
-  defaultNetwork: "rinkeby",
+  defaultNetwork: "mumbai",
   networks: {
     hardhat: {
       // // If you want to do some forking, uncomment this
@@ -76,6 +78,12 @@ module.exports = {
       saveDeployments: true,
       chainId: 137,
     },
+    mumbai: {
+      url: "https://rpc-mumbai.maticvigil.com",
+      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+      saveDeployments: true,
+      chainId: 80001,
+    },
   },
   etherscan: {
     // yarn hardhat verify --network <NETWORK> <CONTRACT_ADDRESS> <CONSTRUCTOR_PARAMETERS>
@@ -94,7 +102,7 @@ module.exports = {
   },
   contractSizer: {
     runOnCompile: false,
-    only: ["APIConsumer", "KeepersCounter", "PriceConsumerV3", "RandomNumberConsumer"],
+    only: ["DelicateDinos", "FakeBoredApeYachtClub", "DinoUpToken", "DelicateDinoMetadata"],
   },
   namedAccounts: {
     deployer: {

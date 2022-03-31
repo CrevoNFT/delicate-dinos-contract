@@ -3,13 +3,13 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deployer } = await getNamedAccounts()
 
   const args = []
-  const delicateDinosToken = await deploy("DelicateDinosToken", {
+  const dinoUpToken = await deploy("DinoUpToken", {
     from: deployer,
     args: args,
     log: true,
   })
 
-  log("Delicate Dinos deployed")
+  log("Dino Up Token deployed")
 }
 
-module.exports.tags = ["all", "dinos_token"]
+module.exports.tags = ["all", "dino_up_token"]
