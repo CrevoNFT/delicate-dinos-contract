@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract DinoUpToken is Ownable, ERC20 {
     mapping(address => uint256) claimable;    
 
-    constructor() ERC20("Dino Grow Token", "DNOUP") {}
+    constructor() ERC20("Dino Up Token", "DNOUP") {}
 
     function getClaimableBalance(address addr) public view returns (uint256) {
         return claimable[addr];

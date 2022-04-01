@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 library DelicateDinosMetadata {
 
-  function dinoURI(uint256 tokenId, string memory imageUrl, uint256 length, string memory name)
+  function dinoURI(uint256 tokenId, string memory imageUrl, uint8 teethLength, uint8 skinThickness, string memory name)
         external
         view
         returns (string memory)
@@ -25,7 +25,7 @@ library DelicateDinosMetadata {
                                     '", "description": "Delicate Dinos is a randomly on-mint generated collection of delicate dinos who are afraid that bad things may be coming upon them.", "image": "',
                                     imageUrl,
                                     '","attributes":',
-                                    _getTraitsAsString(length, name),
+                                    _getTraitsAsString(teethLength, skinThickness, name),
                                     "}"
                                 )
                             )
@@ -35,20 +35,22 @@ library DelicateDinosMetadata {
             );
     }   
 
-  function _getTraitsAsString(uint256 length, string memory name) private view returns(string memory) {
+  function _getTraitsAsString(uint8 teethLength, uint8 skinThickness, string memory name) private view returns(string memory) {
         // Openning list bracket
         string memory traits = "[";
 
         // Name
-        traits = string(
-            abi.encodePacked(
-                traits,
-                '{"trait_type":"Name",',
-                '"value":', 
-                name,
-                '},'
-            )
-        );
+        if (bytes(name).length != 0) {
+            traits = string(
+                abi.encodePacked(
+                    traits,
+                    '{"trait_type":"Name",',
+                    '"value":', 
+                    name,
+                    '},'
+                )
+            );
+        }
         
         // Teeth
         traits = string(
@@ -56,7 +58,18 @@ library DelicateDinosMetadata {
                 traits,
                 '{"trait_type":"Teeth length",',
                 '"value":', 
-                Strings.toString(length), 
+                Strings.toString(teethLength), 
+                '},'
+            )
+        );
+
+        // Skin Thickness
+        traits = string(
+            abi.encodePacked(
+                traits,
+                '{"trait_type":"Skin thickness",',
+                '"value":', 
+                Strings.toString(skinThickness), 
                 '}'
             )
         );

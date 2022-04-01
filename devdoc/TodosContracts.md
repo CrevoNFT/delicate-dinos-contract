@@ -1,3 +1,5 @@
+Improve random allocation of traits on mint
+
 Upgrader Contract
   - upgrade teeth or skin
 

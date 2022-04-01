@@ -3,6 +3,8 @@ Contract Deployment
   - manage Polygon mainnet deployer account
 
 Contract interaction scripts
+  - fund with link
+
   - minting mode
     - whitelist
     - public sale
@@ -17,4 +19,6 @@ Contract interaction scripts
   
   - post-impact drop
     - n most affected dinos get 1 asteroid each
+
+  - unlock nameUpdate
   

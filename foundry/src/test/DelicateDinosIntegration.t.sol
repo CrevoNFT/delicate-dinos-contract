@@ -124,4 +124,13 @@ contract DelicateDinosIntegrationTest is DelicateDinosBaseIntegrationTest {
 
   // TODO upgrade fails when not the owner of the token
 
+  // =============== RENAMING ================== //
+
+  // TODO can rename
+
+  // TODO can only rename once
+  
+  // TODO cannot rename if locked
+
+
 }

@@ -38,8 +38,10 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
     uint256 public constant NUMBER_MAX_DINOS = 1824;
 
     struct Dino {
-        uint256 length;
         string name;
+        uint8 fossilValue;
+        uint8 teethLength;
+        uint8 skinThickness;
     }
 
     uint256 public mintIndex; // inc on mint
@@ -67,6 +69,9 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
 
     address public upgraderContract;
 
+    bool renameUnlocked = false;
+    mapping(uint256 => bool) public tokenIdHasRenamed;
+
     // ----------- errors
     
     error WithdrawFailed();
@@ -78,6 +83,8 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
     error OnlyUpgraderContract();
     error NotEnoughLink();
     error NonExistentERC721Token();
+    error RenameLocked();
+    error HasRenamedAlready();
 
     constructor(
         address _vrfCoordinator,
@@ -150,26 +157,37 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
         tokenIdToMintRequestId[newTokenId] = reqId;
     }
 
-    function _finalizeMintDino(address to, uint256 _tokenId, uint256 length, string memory name) private nonReentrant {
+    function _finalizeMintDino(address to, uint256 _tokenId, uint8 teethLength, uint8 skinThickness, string memory name) private nonReentrant {
         _safeMint(to, _tokenId);
         // set traits
+        uint8 fullFossilValue = 2**8-1;
         tokenIdToDino[_tokenId] = Dino(
-            length,
-            name
+            name,
+            fullFossilValue,
+            teethLength,
+            skinThickness
         );
     }
 
-    // ============= Stats ============= // 
+    // ============= Traits ============= // 
 
-    function getTraits(uint256 tokenId) public view returns (uint256 length, string memory name) {
-        length = tokenIdToDino[tokenId].length;
-        name = tokenIdToDino[tokenId].name;
+    function getTraits(uint256 tokenId) public view returns (uint8 teethLength, uint8 skinThickness, string memory name) {
+        teethLength = tokenIdToDino[tokenId].teethLength;
+        skinThickness = tokenIdToDino[tokenId].teethLength;
+        string memory n = tokenIdToDino[tokenId].name;
+        name = n;
     }
 
-    function updateTraits(uint256 tokenId, uint256 length, string memory name) external {
+    function upgradeTraits(uint256 tokenId, uint8 teethLength, uint8 skinThickness) external {
         if (msg.sender != upgraderContract) revert OnlyUpgraderContract();
-        tokenIdToDino[tokenId].name = name;
-        tokenIdToDino[tokenId].length = length;
+        tokenIdToDino[tokenId].teethLength = teethLength;
+        tokenIdToDino[tokenId].skinThickness = skinThickness;
+    }
+
+    function setName(uint256 tokenId, string memory _name) external {
+        if (!renameUnlocked) revert RenameLocked();
+        if (tokenIdHasRenamed[tokenId]) revert HasRenamedAlready();
+        tokenIdToDino[tokenId].name = _name;
     }
 
     // ============= Randomness ============== //
@@ -190,11 +208,13 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
         if (requestId == lotteryRequestId) {
             _performLotteryDrop(randomness);
         } else {
-            uint256 length = randomness % 10;
+            uint8 teethLength = uint8(randomness % (2**8));
+            uint8 skinThickness = uint8((randomness * 11) % (2**8));
             _finalizeMintDino(
                 mintRequest[requestId].to, 
                 mintRequest[requestId].tokenId, 
-                length, 
+                teethLength, 
+                skinThickness,
                 mintRequest[requestId].name
             );
         }
@@ -212,8 +232,8 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
     {
         if (!_exists(tokenId)) revert NonExistentERC721Token();
         string memory imageUrl = tokenIdHasArtwork[tokenId] ? string(abi.encodePacked(_ourBaseURI, "/", tokenId)) : PLACEHOLDER_IMAGE_URL;
-        (uint256 length, string memory name) = getTraits(tokenId);
-        return DelicateDinosMetadata.dinoURI(tokenId, imageUrl, length, name);
+        (uint8 teethLength, uint8 skinThickness, string memory name) = getTraits(tokenId);
+        return DelicateDinosMetadata.dinoURI(tokenId, imageUrl, teethLength, skinThickness, name);
     }   
 
     /// @dev keep newBaseUri as param to ensure we always remember that base uri (IPFS directory uri)
