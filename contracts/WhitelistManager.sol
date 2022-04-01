@@ -10,18 +10,22 @@ contract WhitelistManager {
 
   mapping(uint8 => mapping(address => bool)) public whitelistClaimed;
 
+  error AlreadyClaimed();
+  error InvalidProof();
+
   function resetWhitelist(bytes32 mr) internal {
     round++;
     merkleRoot = mr;
   }
 
-  function checkWhitelisted(bytes32[] calldata _merkleProof) internal {
-    require(!whitelistClaimed[round][msg.sender], "Address already claimed");
-    bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-    require(
-        MerkleProof.verify(_merkleProof, merkleRoot, leaf),
-        "Invalid Merkle Proof."
-    );
-    whitelistClaimed[round][msg.sender] = true;
+  function hasClaimed(address claimer) public view returns (bool) {
+    return whitelistClaimed[round][claimer];
+  }
+
+  function checkWhitelisted(address claimer, bytes32[] calldata _merkleProof) internal {
+    if (whitelistClaimed[round][claimer]) revert AlreadyClaimed();
+    bytes32 leaf = keccak256(abi.encodePacked(claimer));
+    if (!MerkleProof.verify(_merkleProof, merkleRoot, leaf)) revert InvalidProof();
+    whitelistClaimed[round][claimer] = true;
   }
 }

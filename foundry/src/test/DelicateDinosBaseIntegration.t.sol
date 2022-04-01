@@ -26,9 +26,6 @@ contract DelicateDinosBaseIntegrationTest is DSTest {
     MockDelicateDinosUpgrader public upgrader;
 
     function init() internal {
-        /*/////////////////////////////////////
-                   DEPLOYMENTS 
-        /////////////////////////////////////*/
 
         // Chainlnk
         linkToken = new LinkToken();
@@ -67,18 +64,11 @@ contract DelicateDinosBaseIntegrationTest is DSTest {
 
     // ============== VRF Helpers =============== // 
 
-    // function _vrfRespondAttribute(uint256 randomNumber, uint256 tokenId) internal {
-    //     mockVRFOracle.callBackWithRandomness(
-    //         delicateDinos.tokenIdToRequestId(tokenId),
-    //         randomNumber,
-    //         address(delicateDinos)
-    //     );
-    // }
-    // function _vrfRespondUpgrade(uint256 randomNumber, uint256 tokenId) internal {
-    //     mockVRFOracle.callBackWithRandomness(
-    //         delicateDinos.tokenIdToRequestId(tokenId),
-    //         randomNumber,
-    //         address(delicateDinos)
-    //     );
-    // }
+    function _vrfRespondMint(uint256 randomNumber, bytes32 requestId) internal {
+        mockVRFOracle.callBackWithRandomness(
+            requestId,
+            randomNumber,
+            address(delicateDinos)
+        );
+    }
 }

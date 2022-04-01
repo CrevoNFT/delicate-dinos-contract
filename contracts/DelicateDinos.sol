@@ -42,14 +42,15 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
         string name;
     }
 
-    uint256 mintIndex; // inc on mint
+    uint256 public mintIndex; // inc on mint
     mapping(uint256 => Dino) public tokenIdToDino;
     mapping(uint256 => bool) public tokenIdHasArtwork;
     mapping(uint256 => bool) public tokenIdCanClaim;
+    mapping(uint256 => bytes32) public tokenIdToMintRequestId;
     bytes32 lotteryRequestId;
 
     string private _ourBaseURI;
-    string constant PLACEHOLDER_IMAGE_URL = "ipfs://QmXWbz1EwJvg4u4rDXB3iS33UBk1kL4zyTRiQrda8Hic9D";
+    string public constant PLACEHOLDER_IMAGE_URL = "ipfs://QmXWbz1EwJvg4u4rDXB3iS33UBk1kL4zyTRiQrda8Hic9D";
 
     event ArtworkSet(uint256 tokenId);
 
@@ -125,7 +126,7 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
     function mintDinoWhitelisted(address addr, string memory name, bytes32[] calldata proof) public payable {
         if (mintMode != MintMode.WHITE_LIST) revert NoWhitelistMint();
         if (msg.value != mintFee) revert WrongMintFee();
-        checkWhitelisted(proof);
+        checkWhitelisted(addr, proof);
         _requestMintDino(addr, name);
     }
 
@@ -143,8 +144,10 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
 
     function _requestMintDino(address addr, string memory name) private {
         bytes32 reqId = getRandomNumber();
-        uint256 newTokenId = mintIndex + 1;
+        mintIndex = mintIndex + 1;
+        uint256 newTokenId = mintIndex;
         mintRequest[reqId] = MintRequest(addr, name, newTokenId);
+        tokenIdToMintRequestId[newTokenId] = reqId;
     }
 
     function _finalizeMintDino(address to, uint256 _tokenId, uint256 length, string memory name) private nonReentrant {
@@ -154,14 +157,6 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
             length,
             name
         );
-    }
-
-    // ONLY FOR TESTS - not truly random, produces identical results if called by several callers within same block
-    function requestMintDinoTest(address to, string memory name) public {
-        uint256 rand = block.timestamp;
-        uint256 length = rand % 10;
-        uint256 tokenId = mintIndex + 1;
-        _finalizeMintDino(to, tokenId, length, name);
     }
 
     // ============= Stats ============= // 

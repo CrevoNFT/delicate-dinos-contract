@@ -23,6 +23,10 @@ abstract contract Hevm {
 
     function prank(address) external virtual;
 
+    function startPrank(address) external virtual;
+    
+    function stopPrank() external virtual;
+
     function assume(bool) external virtual;
 
 }

@@ -4,9 +4,10 @@
   "description": "",
   "scripts": {
     "test": "rm -rf foundry/src/contracts && cp -R contracts foundry/src/contracts && cd foundry && forge test",
-    "lint": "solhint 'contracts/*.sol'",
-    "lint:fix": "solhint 'contracts/**/*.sol' --fix",
-    "format": "prettier --write ."
+    "close-minting": "",
+    "open-whitelist": "",
+    "open-public-sale": "",
+    "open-drop-minting": ""
   },
   "license": "MIT",
   "devDependencies": {
