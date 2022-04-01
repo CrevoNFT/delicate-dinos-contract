@@ -115,6 +115,18 @@ contract DelicateDinosIntegrationTest is DelicateDinosBaseIntegrationTest {
 
   // TODO can mint drop if base token has something claimable
 
+  // =============== ARTWORK & STATS ================ // 
+
+  // TODO random token stats in correct range (0..255)
+
+  // TODO name is set correctly
+
+  // TODO tokenURI displays correctly if no name is set
+
+  // TODO placeholder artwork (tokenURI with placeholder)
+
+  // TODO artwork can be updated (baseuri changes, tokenURI correct)
+
 
   // =============== UPGRADER =================== // 
 
@@ -129,7 +141,7 @@ contract DelicateDinosIntegrationTest is DelicateDinosBaseIntegrationTest {
   // TODO can rename
 
   // TODO can only rename once
-  
+
   // TODO cannot rename if locked
 
 

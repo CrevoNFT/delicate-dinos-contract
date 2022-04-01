@@ -209,7 +209,7 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
             _performLotteryDrop(randomness);
         } else {
             uint8 teethLength = uint8(randomness % (2**8));
-            uint8 skinThickness = uint8((randomness * 11) % (2**8));
+            uint8 skinThickness = uint8((randomness * 11) % (2**8)); // TODO random enough?
             _finalizeMintDino(
                 mintRequest[requestId].to, 
                 mintRequest[requestId].tokenId, 

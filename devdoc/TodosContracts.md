@@ -1,7 +1,17 @@
+--------- MANUAL TESTS
+
+Test artwork placeholder and update (check before and after on opensea)
+
+Test metadata update (check refresh on opensea)
+
+Test metadata display when name missing (opensea)
+
+-------- DEV
+
 Improve random allocation of traits on mint
 
 Upgrader Contract
-  - upgrade teeth or skin
+  - upgrades teeth or skin
 
 Impact Mechanics
   - impact distance: [1 .. 10]
