@@ -11,7 +11,7 @@ contract DelicateDinosIntegrationTest is DelicateDinosBaseIntegrationTest {
 
   uint256 constant RANDOM_NUMBER = 12312412121357;  
   bytes32[] merkleProof;
-  bytes32 constant MERKLE_ROOT = bytes32(0x8b43f05a671f2a6e1dc4346a6d0609aef81d9ef8ac55e5f17c093579065f1021);
+  bytes32 constant MERKLE_ROOT = bytes32(0xe99abc00c34b105cee0fb029ef32528d15ac5ed72d3fe510d675f3cc599de199);
 
   function setUp() external {
     init();
@@ -109,11 +109,13 @@ contract DelicateDinosIntegrationTest is DelicateDinosBaseIntegrationTest {
 
   // ================ MINT DROP ================= // 
 
-  // TODO drop lottery
+  // TODO drop lottery - only while no whitelist or public sale is happening
 
-  // TODO can only mint drop when in drop mode
+  // TODO drop lottery - new tokens are indeed minted
+  
+  // TODO drop lottery - fuzz - higher chances for favoured tokenIds
 
-  // TODO can mint drop if base token has something claimable
+
 
   // =============== ARTWORK & STATS ================ // 
 

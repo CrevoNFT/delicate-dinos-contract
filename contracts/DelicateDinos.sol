@@ -4,10 +4,11 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol"; 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "./WhitelistManager.sol"; 
+import "./DelicateDinosRandomness.sol"; 
+import "./libs/DelicateDinosUpgrade.sol"; 
 import "./libs/DelicateDinosMetadata.sol";
-
+import "./DinoUpToken.sol";
 
 /**
 @notice A collection of randomly generated Dinosaurs
@@ -18,13 +19,10 @@ import "./libs/DelicateDinosMetadata.sol";
  * 
  * We use placeholder metadata for collection items that don't have metadata yet.
  */
-contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, ReentrancyGuard {
+contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
 
     // =========== Randomness ============= //
-    bytes32 internal keyHash; 
-    uint256 internal vrfFee;
-
-    event ReturnedRandomness(uint256 randomNumber);
+    DelicateDinosRandomness public randomnessProvider;
 
     struct MintRequest {
         address to;
@@ -47,10 +45,10 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
     uint256 public mintIndex; // inc on mint
     mapping(uint256 => Dino) public tokenIdToDino;
     mapping(uint256 => bool) public tokenIdHasArtwork;
-    mapping(uint256 => bool) public tokenIdCanClaim;
     mapping(uint256 => bytes32) public tokenIdToMintRequestId;
-    bytes32 lotteryRequestId;
-
+    
+    mapping(uint256 => bool) public ticketIndexPicked;
+    
     string private _ourBaseURI;
     string public constant PLACEHOLDER_IMAGE_URL = "ipfs://QmXWbz1EwJvg4u4rDXB3iS33UBk1kL4zyTRiQrda8Hic9D";
 
@@ -67,10 +65,10 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
     uint256 public mintFee = 0;
     uint256 public lastDecoratedTokenId;
 
-    address public upgraderContract;
-
     bool renameUnlocked = false;
     mapping(uint256 => bool) public tokenIdHasRenamed;
+
+    DinoUpToken public dinoUpToken;
 
     // ----------- errors
     
@@ -78,35 +76,40 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
     error NoWhitelistMint();
     error NoPublicSale();
     error WrongMintFee();
+    error NotTokenOwner();
     error NotOwnerOfBaseToken();
     error NothingToClaimForTokenId();
-    error OnlyUpgraderContract();
-    error NotEnoughLink();
+    error OnlyRandomnessProvider();
+    error NotEnoughDnoUp();
     error NonExistentERC721Token();
     error RenameLocked();
     error HasRenamedAlready();
+    error InsufficientAllowanceToUpgrade();
+
+    modifier onlyRandomnessProvider {
+        if (msg.sender != address(randomnessProvider)) revert OnlyRandomnessProvider();
+        _;
+    }
 
     constructor(
         address _vrfCoordinator,
         address _link,
         bytes32 _keyHash,
         uint256 _fee
-    ) VRFConsumerBase(
-        _vrfCoordinator, 
-        _link 
     ) ERC721("Delicate Dinos", "DELS")
     {
-        keyHash = _keyHash;
-        vrfFee = _fee;
+        randomnessProvider = new DelicateDinosRandomness(
+            _vrfCoordinator,
+            _link,
+            _keyHash,
+            _fee
+        );
+        dinoUpToken = new DinoUpToken();
     }
 
     function withdraw() public onlyOwner {
         (bool success, ) = payable(owner()).call{value: address(this).balance}("");
         if (!success) revert WithdrawFailed();
-    }
-
-    function withdrawLink() public onlyOwner {
-        LINK.transfer(msg.sender, LINK.balanceOf(address(this)));
     }
 
     // ====================== MINTING ==================== //
@@ -143,30 +146,49 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
         _requestMintDino(addr, name);
     }
 
-    function mintDinoClaimed(uint256 tokenId, string memory name) public nonReentrant {
-        if (ownerOf(tokenId) != msg.sender) revert NotOwnerOfBaseToken();
-        if (!tokenIdCanClaim[tokenId]) revert NothingToClaimForTokenId();
-        _requestMintDino(msg.sender, name);
-    }
-
     function _requestMintDino(address addr, string memory name) private {
-        bytes32 reqId = getRandomNumber();
+        bytes32 reqId = randomnessProvider.getRandomNumber();
         mintIndex = mintIndex + 1;
         uint256 newTokenId = mintIndex;
         mintRequest[reqId] = MintRequest(addr, name, newTokenId);
         tokenIdToMintRequestId[newTokenId] = reqId;
     }
 
-    function _finalizeMintDino(address to, uint256 _tokenId, uint8 teethLength, uint8 skinThickness, string memory name) private nonReentrant {
-        _safeMint(to, _tokenId);
+    function finalizeMintDino(bytes32 requestId, uint256 randomness) external nonReentrant onlyRandomnessProvider {
+        address to = mintRequest[requestId].to;
+        uint256 _tokenId = mintRequest[requestId].tokenId;
+        string memory name = mintRequest[requestId].name;
+        uint256[] memory twoValues = randomnessProvider.expandRandom(randomness, 2);
+        uint8 teethLength = uint8(twoValues[0] % (2**8));
+        uint8 skinThickness = uint8(twoValues[1] % (2**8)); 
+        _mintDinoWithTraits(to, _tokenId, teethLength, skinThickness, name);
+    }
+
+    function _mintDinoWithTraits(
+        address to,
+        uint256 tokenId,
+        uint8 teethLength,
+        uint8 skinThickness,
+        string memory name
+    ) private {
+        _safeMint(to, tokenId);
         // set traits
-        uint8 fullFossilValue = 2**8-1;
-        tokenIdToDino[_tokenId] = Dino(
+        uint8 fullFossilValue = 2**8-1; // max at birth
+        tokenIdToDino[tokenId] = Dino(
             name,
             fullFossilValue,
             teethLength,
             skinThickness
         );
+    }
+
+    function _mintToLotteryWinner(address winner, uint256 randomness) private {
+        mintIndex = mintIndex + 1;
+        uint256 newTokenId = mintIndex;
+        uint256[] memory twoValues = randomnessProvider.expandRandom(randomness, 2);
+        uint8 teethLength = uint8(twoValues[0] % (2**8));
+        uint8 skinThickness = uint8(twoValues[1] % (2**8)); 
+        _mintDinoWithTraits(winner, newTokenId, teethLength, skinThickness, "");
     }
 
     // ============= Traits ============= // 
@@ -178,46 +200,29 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
         name = n;
     }
 
-    function upgradeTraits(uint256 tokenId, uint8 teethLength, uint8 skinThickness) external {
-        if (msg.sender != upgraderContract) revert OnlyUpgraderContract();
-        tokenIdToDino[tokenId].teethLength = teethLength;
-        tokenIdToDino[tokenId].skinThickness = skinThickness;
+    function upgradeTraits(
+        uint256 tokenId, uint8 teethLengthDelta, uint8 skinThicknessDelta, uint256 dnoUpTokenAmount
+    ) public {
+        if (ownerOf(tokenId) != msg.sender) revert NotTokenOwner();
+        if (dinoUpToken.allowance(msg.sender, address(this)) < dnoUpTokenAmount) revert InsufficientAllowanceToUpgrade();
+
+        uint256 requiredTokenAmount = DelicateDinosUpgrade.requiredTokenAmount(
+            tokenIdToDino[tokenId].teethLength,
+            tokenIdToDino[tokenId].skinThickness,
+            teethLengthDelta,
+            skinThicknessDelta
+        );
+        bool sufficientDnoUp = dnoUpTokenAmount >= requiredTokenAmount; 
+        if (!sufficientDnoUp) revert NotEnoughDnoUp();
+
+        tokenIdToDino[tokenId].teethLength += teethLengthDelta;
+        tokenIdToDino[tokenId].skinThickness += skinThicknessDelta;
     }
 
-    function setName(uint256 tokenId, string memory _name) external {
+    function setName(uint256 tokenId, string memory _name) public {
         if (!renameUnlocked) revert RenameLocked();
         if (tokenIdHasRenamed[tokenId]) revert HasRenamedAlready();
         tokenIdToDino[tokenId].name = _name;
-    }
-
-    // ============= Randomness ============== //
-
-    /**
-    * Requests randomness
-    */
-    function getRandomNumber() public returns (bytes32 requestId) {
-        if (LINK.balanceOf(address(this)) < vrfFee) revert NotEnoughLink();
-        return requestRandomness(keyHash, vrfFee);
-    }
-
-    /**
-    * Callback function used by VRF Coordinator
-    */
-    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-        emit ReturnedRandomness(randomness);
-        if (requestId == lotteryRequestId) {
-            _performLotteryDrop(randomness);
-        } else {
-            uint8 teethLength = uint8(randomness % (2**8));
-            uint8 skinThickness = uint8((randomness * 11) % (2**8)); // TODO random enough?
-            _finalizeMintDino(
-                mintRequest[requestId].to, 
-                mintRequest[requestId].tokenId, 
-                teethLength, 
-                skinThickness,
-                mintRequest[requestId].name
-            );
-        }
     }
 
     // ============= Token URI ============== //
@@ -250,36 +255,42 @@ contract DelicateDinos is Ownable, VRFConsumerBase, ERC721, WhitelistManager, Re
 
     // ============= Drop Lottery ============ //
 
-    function requestForDrop() public onlyOwner {
-        lotteryRequestId = getRandomNumber();
+    function applyFavouredTokenIds(
+        uint16[] calldata favouredTokenIds,
+        uint8 favourFactor,
+        uint256 supply
+    ) external override onlyRandomnessProvider {
+        this.applyFavouredTokenIds(favouredTokenIds, favourFactor, supply);
     }
 
-    /// @dev provides relatively distributed picks
-    function _performLotteryDrop(uint256 randomness) private {
+    /// @notice Drops nfts to lottery winners. 
+    /// Winners are picked based on already available tickets. There are more tickets
+    /// associated with the favoured tokenIds => those tokenIds' holders have higher chances.
+    /// The lottery tickets were set in WhitelistManager.applyFavouredTokenIds.
+    /// @dev Worst case O(n**2)
+    /// @dev This function directly mints new dinos without dedicated vrf requests. 
+    /// All the lottery functionality + the random allocation of traits happends based
+    /// on the @param randomness seed.
+    function performLotteryDrop(uint256 randomness) external onlyRandomnessProvider {
         uint256 numberExisting = mintIndex;
         uint256 numberDroppable = NUMBER_MAX_DINOS - numberExisting;
+
+        uint256[] memory manySeeds = randomnessProvider.expandRandom(randomness, numberDroppable);
         
-        uint256 idx = randomness % numberExisting + 1;
-        while (numberDroppable > 0) {
-            // find next index
-            uint256 stepSize = (idx / 2 % numberExisting) + 1;
-            uint256 nextIdx = (idx + stepSize) % numberExisting + 1;
-            while (tokenIdCanClaim[nextIdx]) {
-                stepSize++;
-                nextIdx = (idx + stepSize) % numberExisting + 1;
+        uint256 dropCt = 0;
+        while (dropCt < numberDroppable) {
+            // initialize index from random seed
+            uint256 idx = manySeeds[dropCt] % numberExisting + 1;
+            // find first one not yet picked
+            while (ticketIndexPicked[idx]) {
+                idx++;
             }
-            // keep next index
-            idx = nextIdx;
-
-            // set claim
-            tokenIdCanClaim[idx] = true;
-            numberDroppable--;
+            // mark pick
+            ticketIndexPicked[idx] = true;
+            // mint-drop
+            address winner = ownerOf(tokenIdTickets[idx]);
+            _mintToLotteryWinner(winner, manySeeds[dropCt]); // reuse random number
+            dropCt++;
         }
-    }
-
-    // =========== UPGRADES =============
-
-    function setUpgraderContract(address _upgraderContract) external onlyOwner {
-        upgraderContract = _upgraderContract;
     }
 }

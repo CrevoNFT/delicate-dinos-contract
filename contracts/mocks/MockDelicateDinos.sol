@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../DelicateDinos.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 contract MockDelicateDinos is DelicateDinos {
     constructor(address _vrfCoordinator,
@@ -11,8 +12,10 @@ contract MockDelicateDinos is DelicateDinos {
         uint256 _fee
     ) DelicateDinos(_vrfCoordinator, _link, _keyHash, _fee) {}
 
-    function mintFive(address account) external {
-        
+
+    function isWhitelisted(address a, bytes32 merkleRoot, bytes32[] calldata _merkleProof) public view returns (bool) {
+        bytes32 leaf = keccak256(abi.encodePacked(a));
+        return MerkleProof.verify(_merkleProof, merkleRoot, leaf);
     }
 
 }

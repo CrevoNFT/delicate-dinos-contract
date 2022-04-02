@@ -8,7 +8,9 @@ Contract interaction scripts
   - minting mode
     - whitelist
     - public sale
-    - drop mint (kickoff with lottery)
+    - drop mint (kickoff with lottery - on-chain with favoured whitelist)
+      -  => setWwhitelistedTokenIds script
+      -  read transfer events from opensea, sort by highest price, call contract with those
 
   - generate artwork
     - for all minted tokenIds that don't have it
