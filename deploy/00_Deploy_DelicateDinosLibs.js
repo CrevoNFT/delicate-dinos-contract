@@ -8,8 +8,13 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     args: [],
     log: true,
   })
-
   log("Delicate Dinos Metadata Library deployed")
+  const delicateDinosUpgrade = await deploy("DelicateDinosUpgrade", {
+    from: deployer,
+    args: [],
+    log: true,
+  })
+  log("Delicate Dinos Upgrade Library deployed")
 }
 
 module.exports.tags = ["all", "dinos_metadata_library"]

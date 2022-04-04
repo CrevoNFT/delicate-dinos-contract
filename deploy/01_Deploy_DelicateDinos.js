@@ -8,11 +8,15 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const cfg = networkConfig[chainId]
   const args = [cfg.vrfCoordinator, cfg.linkToken, cfg.keyHash, cfg.fee]
   const metadataLibraryAddress = (await get("DelicateDinosMetadata")).address
+  const upgradeLibraryAddress = (await get("DelicateDinosUpgrade")).address
   const delicateDinos = await deploy("DelicateDinos", {
     from: deployer,
     args: args,
     log: true,
-    libraries: { DelicateDinosMetadata: metadataLibraryAddress },
+    libraries: {
+      DelicateDinosMetadata: metadataLibraryAddress,
+      DelicateDinosUpgrade: upgradeLibraryAddress,
+    },
   })
 
   log("Delicate Dinos deployed")
