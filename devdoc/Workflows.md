@@ -1,3 +1,12 @@
+=============== Deployment
+
+Hardhat Deploy Scripts
+  - DelicateDinosMetadata
+  - DelicateDinos
+  - DinoUpToken
+
+Fund DelicateDinos with LINK
+
 
 =============== Minting
 
