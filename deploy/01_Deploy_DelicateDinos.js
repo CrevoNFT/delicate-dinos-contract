@@ -1,5 +1,7 @@
 const { networkConfig } = require("../helper-hardhat-config")
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
 module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deploy, get, log } = deployments
   const { deployer } = await getNamedAccounts()
@@ -20,6 +22,18 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   })
 
   log("Delicate Dinos deployed")
+
+  await sleep(10000)
+
+  try {
+    run("verify:verify", {
+      address: delicateDinos.address,
+      contract: "contracts/DelicateDinos.sol:DelicateDinos",
+      constructorArguments: [cfg.vrfCoordinator, cfg.linkToken, cfg.keyHash, cfg.fee],
+    })
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 module.exports.tags = ["all", "dinos_nft"]
