@@ -4,6 +4,7 @@
   "description": "",
   "scripts": {
     "test": "rm -rf foundry/src/contracts && cp -R contracts foundry/src/contracts && cd foundry && forge test",
+    "verify-all": "node scripts/verify.js",
     "close-minting": "",
     "open-whitelist": "",
     "open-public-sale": "",

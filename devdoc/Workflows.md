@@ -2,10 +2,18 @@
 
 Hardhat Deploy Scripts
   - DelicateDinosMetadata
-  - DelicateDinos
+  - DelicateDinosUpgrade
   - DinoUpToken
+  - DelicateDinos
 
 Fund DelicateDinos with LINK
+
+
+----------
+startPublicSale()
+fee 0.01 MATIC = 10000000000000000
+
+---------- 
 
 
 =============== Minting

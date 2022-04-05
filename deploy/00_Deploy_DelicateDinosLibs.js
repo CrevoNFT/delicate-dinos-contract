@@ -18,27 +18,27 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   })
   log("Delicate Dinos Upgrade Library deployed")
 
-  await sleep(10000)
+  // await sleep(15000)
 
-  try {
-    run("verify:verify", {
-      address: delicateDinosMetadata.address,
-      contract: "contracts/libs/DelicateDinosMetadata.sol:DelicateDinosMetadata",
-      constructorArguments: [],
-    })
-  } catch (error) {
-    console.error(error)
-  }
+  // try {
+  //   run("verify:verify", {
+  //     address: delicateDinosMetadata.address,
+  //     contract: "contracts/libs/DelicateDinosMetadata.sol:DelicateDinosMetadata",
+  //     constructorArguments: [],
+  //   })
+  // } catch (error) {
+  //   console.error(error)
+  // }
 
-  try {
-    run("verify:verify", {
-      address: delicateDinosUpgrade.address,
-      contract: "contracts/libs/DelicateDinosUpgrade.sol:DelicateDinosUpgrade",
-      constructorArguments: [],
-    })
-  } catch (error) {
-    console.error(error)
-  }
+  // try {
+  //   run("verify:verify", {
+  //     address: delicateDinosUpgrade.address,
+  //     contract: "contracts/libs/DelicateDinosUpgrade.sol:DelicateDinosUpgrade",
+  //     constructorArguments: [],
+  //   })
+  // } catch (error) {
+  //   console.error(error)
+  // }
 }
 
 module.exports.tags = ["all", "dinos_metadata_library"]

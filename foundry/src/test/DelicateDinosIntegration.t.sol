@@ -31,6 +31,7 @@ contract DelicateDinosIntegrationTest is DelicateDinosBaseIntegrationTest {
     bytes32 requestId = delicateDinos.tokenIdToMintRequestId(1);
     _vrfRespondMint(RANDOM_NUMBER, requestId);
     assertTrue(delicateDinos.ownerOf(1) == address(this));
+    emit log_string(delicateDinos.tokenURI(1));
   }
 
   function testCannotMintTwiceWhitelisted() external {

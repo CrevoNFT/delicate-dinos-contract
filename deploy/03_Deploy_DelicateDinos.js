@@ -8,9 +8,10 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const chainId = await getChainId()
 
   const cfg = networkConfig[chainId]
-  const args = [cfg.vrfCoordinator, cfg.linkToken, cfg.keyHash, cfg.fee]
   const metadataLibraryAddress = (await get("DelicateDinosMetadata")).address
   const upgradeLibraryAddress = (await get("DelicateDinosUpgrade")).address
+  const dinoUpTokenAddress = (await get("DinoUpToken")).address
+  const args = [cfg.vrfCoordinator, cfg.linkToken, cfg.keyHash, cfg.fee, dinoUpTokenAddress]
   const delicateDinos = await deploy("DelicateDinos", {
     from: deployer,
     args: args,
@@ -23,17 +24,17 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   log("Delicate Dinos deployed")
 
-  await sleep(10000)
+  // await sleep(15000)
 
-  try {
-    run("verify:verify", {
-      address: delicateDinos.address,
-      contract: "contracts/DelicateDinos.sol:DelicateDinos",
-      constructorArguments: [cfg.vrfCoordinator, cfg.linkToken, cfg.keyHash, cfg.fee],
-    })
-  } catch (error) {
-    console.error(error)
-  }
+  // try {
+  //   run("verify:verify", {
+  //     address: delicateDinos.address,
+  //     contract: "contracts/DelicateDinos.sol:DelicateDinos",
+  //     constructorArguments: [cfg.vrfCoordinator, cfg.linkToken, cfg.keyHash, cfg.fee],
+  //   })
+  // } catch (error) {
+  //   console.error(error)
+  // }
 }
 
 module.exports.tags = ["all", "dinos_nft"]

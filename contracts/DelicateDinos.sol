@@ -9,6 +9,7 @@ import "./DelicateDinosRandomness.sol";
 import "./libs/DelicateDinosUpgrade.sol"; 
 import "./libs/DelicateDinosMetadata.sol";
 import "./DinoUpToken.sol";
+import "./interfaces/ILinkToken.sol";
 
 /**
 @notice A collection of randomly generated Dinosaurs
@@ -23,6 +24,7 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
 
     // =========== Randomness ============= //
     DelicateDinosRandomness public randomnessProvider;
+    address public linkToken;
 
     struct MintRequest {
         address to;
@@ -95,7 +97,8 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
         address _vrfCoordinator,
         address _link,
         bytes32 _keyHash,
-        uint256 _fee
+        uint256 _fee,
+        address _dinoUpToken
     ) ERC721("Delicate Dinos", "DELS")
     {
         randomnessProvider = new DelicateDinosRandomness(
@@ -104,12 +107,18 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
             _keyHash,
             _fee
         );
-        dinoUpToken = new DinoUpToken();
+        dinoUpToken = DinoUpToken(_dinoUpToken);
+        linkToken = _link;
     }
 
     function withdraw() public onlyOwner {
         (bool success, ) = payable(owner()).call{value: address(this).balance}("");
         if (!success) revert WithdrawFailed();
+    }
+
+    function withdrawLink() public onlyOwner {
+        randomnessProvider.withdrawLink();
+        ILinkToken(linkToken).transfer(msg.sender, ILinkToken(linkToken).balanceOf(address(this)));
     }
 
     // ====================== MINTING ==================== //

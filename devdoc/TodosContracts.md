@@ -1,5 +1,5 @@
 --------- Opensea Integration
-- URI suffix .json
+- URI suffix .json ?
 
 - placeholder preview hash
 

@@ -9,8 +9,9 @@ contract MockDelicateDinos is DelicateDinos {
     constructor(address _vrfCoordinator,
         address _link,
         bytes32 _keyHash,
-        uint256 _fee
-    ) DelicateDinos(_vrfCoordinator, _link, _keyHash, _fee) {}
+        uint256 _fee,
+        address _dinoUpToken
+    ) DelicateDinos(_vrfCoordinator, _link, _keyHash, _fee, _dinoUpToken) {}
 
 
     function isWhitelisted(address a, bytes32 merkleRoot, bytes32[] calldata _merkleProof) public view returns (bool) {

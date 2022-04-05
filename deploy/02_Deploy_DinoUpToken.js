@@ -13,17 +13,17 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   log("Dino Up Token deployed")
 
-  await sleep(10000)
+  // await sleep(15000)
 
-  try {
-    run("verify:verify", {
-      address: dinoUpToken.address,
-      contract: "contracts/DinoUpToken.sol:DinoUpToken",
-      constructorArguments: [],
-    })
-  } catch (error) {
-    console.error(error)
-  }
+  // try {
+  //   run("verify:verify", {
+  //     address: dinoUpToken.address,
+  //     contract: "contracts/DinoUpToken.sol:DinoUpToken",
+  //     constructorArguments: [],
+  //   })
+  // } catch (error) {
+  //   console.error(error)
+  // }
 }
 
 module.exports.tags = ["all", "dino_up_token"]
