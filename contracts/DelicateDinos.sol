@@ -50,7 +50,7 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
     mapping(uint256 => bool) public ticketIndexPicked;
     
     string private _ourBaseURI;
-    string public constant PLACEHOLDER_IMAGE_URL = "ipfs://QmXWbz1EwJvg4u4rDXB3iS33UBk1kL4zyTRiQrda8Hic9D";
+    string public constant PLACEHOLDER_IMAGE_URL = "ipfs://QmVg9ZSr3dL8C8Qcm1C8v51xUqhQYGX4NarRkKGsJXJiLs";
 
     event ArtworkSet(uint256 tokenId);
 

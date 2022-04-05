@@ -82,5 +82,7 @@ library DelicateDinosMetadata {
                 ']'
             )
         );
+
+        return traits;
     }
 }

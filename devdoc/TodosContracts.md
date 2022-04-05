@@ -1,3 +1,10 @@
+--------- Opensea Integration
+- URI suffix .json
+
+- placeholder preview hash
+
+- properties vs levels
+
 --------- MANUAL TESTS
 
 Test how many favoured tokenIds can be set on mumbai

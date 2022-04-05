@@ -31,14 +31,10 @@ const networkConfig = {
   4: {
     name: "rinkeby",
     linkToken: "0x01be23585060835e02b77ef475b0cc51aa1e0709",
-    ethUsdPriceFeed: "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e",
     keyHash: "0x2ed0feb3e7fd2022120aa84fab1945545a9f2ffc9076fd6156fa96eaff4c1311",
     vrfCoordinator: "0xb3dCcb4Cf7a26f6cf6B120Cf5A73875B7BBc655B",
-    oracle: "0xc57b33452b4f7bb189bb5afae9cc4aba1f7a4fd8",
     jobId: "6b88e0402e5d415eb946e528b8e0c7ba",
     fee: "100000000000000000",
-    fundAmount: "100000000000000000", // 0.1
-    keepersUpdateInterval: "30",
   },
   1: {
     name: "mainnet",
