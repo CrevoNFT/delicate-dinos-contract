@@ -16,4 +16,8 @@ contract MockDelicateDinos is DelicateDinos {
         return MerkleProof.verify(_merkleProof, merkleRoot, leaf);
     }
 
+    function getTokenIdToMintRequestId(uint256 tokenId) external returns(bytes32) {
+        return tokenIdToMintRequestId[tokenId];
+    }
+
 }

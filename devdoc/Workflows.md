@@ -11,7 +11,7 @@ libs
   - DelicateDinos(randomnessProv, upToken,raffle)
   - DelicateDinosRaffle.initMaster(delicateDinos)
 
-Fund DelicateDinos with LINK
+Fund DelicateDinosRandomness with LINK
 
 # Minting Controls
 

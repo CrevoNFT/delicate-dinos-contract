@@ -9,7 +9,7 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
 
   const cfg = networkConfig[chainId]
   const args = [cfg.vrfCoordinator, cfg.linkToken, cfg.keyHash, cfg.fee]
-  const randomnessProvider = await deploy("DelicateDinosRandomnes", {
+  const randomnessProvider = await deploy("DelicateDinosRandomness", {
     from: deployer,
     args: args,
     log: true,

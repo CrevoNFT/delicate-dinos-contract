@@ -28,7 +28,7 @@ contract DelicateDinosIntegrationTest is DelicateDinosBaseIntegrationTest {
     assertTrue(delicateDinos.supply() == 0);
     delicateDinos.mintDinoWhitelisted{value: _fee}(address(this), "Firsty", merkleProof);
     assertTrue(delicateDinos.supply() == 1);
-    bytes32 requestId = delicateDinos.tokenIdToMintRequestId(1);
+    bytes32 requestId = delicateDinos.getTokenIdToMintRequestId(1);
     _vrfRespondMint(RANDOM_NUMBER, requestId);
     assertTrue(delicateDinos.ownerOf(1) == address(this));
     emit log_string(delicateDinos.tokenURI(1));
@@ -38,7 +38,7 @@ contract DelicateDinosIntegrationTest is DelicateDinosBaseIntegrationTest {
     uint256 _fee = 1e18;
     delicateDinos.startWhitelistMint(MERKLE_ROOT, _fee);
     delicateDinos.mintDinoWhitelisted{value: _fee}(address(this), "Firsty", merkleProof);
-    bytes32 requestId = delicateDinos.tokenIdToMintRequestId(1);
+    bytes32 requestId = delicateDinos.getTokenIdToMintRequestId(1);
     _vrfRespondMint(RANDOM_NUMBER, requestId);
     assertTrue(delicateDinos.hasClaimed(address(this)));
     HEVM.expectRevert(abi.encodeWithSelector(WhitelistManager.AlreadyClaimed.selector));

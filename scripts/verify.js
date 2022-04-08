@@ -43,6 +43,8 @@ const main = async () => {
   try {
     await verify("DelicateDinosMetadata", true)
     await verify("DelicateDinosUpgrade", true)
+    await verify("DelicateDinosRandomness")
+    await verify("DelicateDinosRaffle")
     await verify("DinoUpToken")
     await verify("DelicateDinos")
   } catch (e) {

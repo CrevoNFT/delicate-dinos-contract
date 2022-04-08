@@ -47,7 +47,7 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager {
     uint256 public supply; // inc on mint
     mapping(uint256 => Dino) public tokenIdToDino;
     mapping(uint256 => bool) public tokenIdHasArtwork;
-    mapping(uint256 => bytes32) public tokenIdToMintRequestId;
+    mapping(uint256 => bytes32) internal tokenIdToMintRequestId;
     
     string private _ourBaseURI;
     string public constant PLACEHOLDER_IMAGE_URL = "ipfs://QmVg9ZSr3dL8C8Qcm1C8v51xUqhQYGX4NarRkKGsJXJiLs";
