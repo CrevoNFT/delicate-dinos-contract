@@ -8,8 +8,10 @@ libs
   - DelicateDinosRandomness
   - DinoUpToken
   - DelicateDinosRaffle
-  - DelicateDinos(randomnessProv, upToken,raffle)
-  - DelicateDinosRaffle.initMaster(delicateDinos)
+   
+  - ==> DelicateDinos(randomnessProv, upToken, raffle)
+
+  - INIT: DelicateDinosRandomness.initMaster(delicateDinos)
 
 Fund DelicateDinosRandomness with LINK
 

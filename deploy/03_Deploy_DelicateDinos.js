@@ -9,9 +9,9 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const metadataLibraryAddress = (await get("DelicateDinosMetadata")).address
   const upgradeLibraryAddress = (await get("DelicateDinosUpgrade")).address
   const dinoUpTokenAddress = (await get("DinoUpToken")).address
-  const randomnessProvider = (await get("DelicateDinosRandomness")).address
-  const raffleContract = (await get("DelicateDinosRaffle")).address
-  const args = [randomnessProvider, raffleContract, dinoUpTokenAddress]
+  const randomnessProviderAddress = (await get("DelicateDinosRandomness")).address
+  const raffleContractAddress = (await get("DelicateDinosRaffle")).address
+  const args = [randomnessProviderAddress, raffleContractAddress, dinoUpTokenAddress]
   const delicateDinos = await deploy("DelicateDinos", {
     from: deployer,
     args: args,
@@ -23,6 +23,10 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   })
 
   log("Delicate Dinos deployed")
+
+  // set delicateDinos as master of randomness provider
+  const randomnessProvider = await get("delicateDinosRandomness")
+  await randomnessProvider.initMaster(delicateDinos.address)
 
   // await sleep(15000)
 
