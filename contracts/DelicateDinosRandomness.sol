@@ -20,7 +20,15 @@ contract DelicateDinosRandomness is VRFConsumerBase, Ownable {
   bytes32 impactRequestId;
 
   error NotEnoughLink();
+  error NotTheWithdrawer();
 
+  // ============= Withdrawals ============== // 
+
+  address public withdrawer;
+  modifier onlyWithdrawer() {
+    if (msg.sender != withdrawer) revert NotTheWithdrawer();
+    _;
+  }
   
   constructor(
     address _vrfCoordinator,
@@ -31,13 +39,21 @@ contract DelicateDinosRandomness is VRFConsumerBase, Ownable {
       _vrfCoordinator, 
       _link
   ) {
-    delicateDinosContract = DelicateDinos(msg.sender);
     keyHash = _keyHash;
     vrfFee = _fee;
   }
 
+  function initMaster(address _dinosContract) public onlyOwner {
+    delicateDinosContract = DelicateDinos(_dinosContract);
+    withdrawer = delicateDinosContract.owner();
+  }
+
   function withdrawLink() public onlyOwner {
     LINK.transfer(msg.sender, LINK.balanceOf(address(this)));
+  }
+
+  function changeWithdrawer(address _withdrawer) public onlyWithdrawer {
+    withdrawer = _withdrawer;
   }
 
   /// @notice request for a randomness seed to use in the drop lottery

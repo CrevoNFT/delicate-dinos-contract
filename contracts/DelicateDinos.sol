@@ -2,14 +2,13 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol"; 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./WhitelistManager.sol"; 
-import "./DelicateDinosRandomness.sol"; 
+import "./interfaces/IDelicateDinosRandomness.sol"; 
+import "./interfaces/IDelicateDinosRaffle.sol"; 
+import "./interfaces/IDinoUpToken.sol";
 import "./libs/DelicateDinosUpgrade.sol"; 
 import "./libs/DelicateDinosMetadata.sol";
-import "./DinoUpToken.sol";
-import "./interfaces/ILinkToken.sol";
 
 /**
 @notice A collection of randomly generated Dinosaurs
@@ -20,11 +19,12 @@ import "./interfaces/ILinkToken.sol";
  * 
  * We use placeholder metadata for collection items that don't have metadata yet.
  */
-contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
+contract DelicateDinos is Ownable, ERC721, WhitelistManager {
 
+    IDelicateDinosRaffle public raffleContract;
+    
     // =========== Randomness ============= //
-    DelicateDinosRandomness public randomnessProvider;
-    address public linkToken;
+    IDelicateDinosRandomness public randomnessProvider;
 
     struct MintRequest {
         address to;
@@ -49,8 +49,6 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
     mapping(uint256 => bool) public tokenIdHasArtwork;
     mapping(uint256 => bytes32) public tokenIdToMintRequestId;
     
-    mapping(uint256 => bool) public ticketIndexPicked;
-    
     string private _ourBaseURI;
     string public constant PLACEHOLDER_IMAGE_URL = "ipfs://QmVg9ZSr3dL8C8Qcm1C8v51xUqhQYGX4NarRkKGsJXJiLs";
 
@@ -72,7 +70,7 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
     bool renameUnlocked = false;
     mapping(uint256 => bool) public tokenIdHasRenamed;
 
-    DinoUpToken public dinoUpToken;
+    IDinoUpToken public dinoUpToken;
 
     // ----------- errors
     
@@ -84,6 +82,7 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
     error NotOwnerOfBaseToken();
     error NothingToClaimForTokenId();
     error OnlyRandomnessProvider();
+    error OnlyRaffle();
     error NotEnoughDnoUp();
     error NonExistentERC721Token();
     error RenameLocked();
@@ -96,31 +95,19 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
     }
 
     constructor(
-        address _vrfCoordinator,
-        address _link,
-        bytes32 _keyHash,
-        uint256 _fee,
+        address _randomnessProvider,
+        address _raffleContract,
         address _dinoUpToken
     ) ERC721("Delicate Dinos", "DELS")
     {
-        randomnessProvider = new DelicateDinosRandomness(
-            _vrfCoordinator,
-            _link,
-            _keyHash,
-            _fee
-        );
-        dinoUpToken = DinoUpToken(_dinoUpToken);
-        linkToken = _link;
+        randomnessProvider = IDelicateDinosRandomness(_randomnessProvider);
+        raffleContract = IDelicateDinosRaffle(_raffleContract);
+        dinoUpToken = IDinoUpToken(_dinoUpToken);
     }
 
     function withdraw() public onlyOwner {
         (bool success, ) = payable(owner()).call{value: address(this).balance}("");
         if (!success) revert WithdrawFailed();
-    }
-
-    function withdrawLink() public onlyOwner {
-        randomnessProvider.withdrawLink();
-        ILinkToken(linkToken).transfer(msg.sender, ILinkToken(linkToken).balanceOf(address(this)));
     }
 
     // ====================== MINTING ==================== //
@@ -165,7 +152,7 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
         tokenIdToMintRequestId[newTokenId] = reqId;
     }
 
-    function finalizeMintDino(bytes32 requestId, uint256 randomness) external nonReentrant onlyRandomnessProvider {
+    function finalizeMintDino(bytes32 requestId, uint256 randomness) external onlyRandomnessProvider {
         address to = mintRequest[requestId].to;
         uint256 _tokenId = mintRequest[requestId].tokenId;
         string memory name = mintRequest[requestId].name;
@@ -270,40 +257,22 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
     /// @param favouredTokenIds array of token ids which are favoured in the lottery
     /// @param favourFactor how many tickets a favoured Token Id gets in the lottery
     function startDrop(uint16[] calldata favouredTokenIds, uint8 favourFactor) external onlyOwner {
-        _applyFavTokenIds(favouredTokenIds, favourFactor, supply);
+        raffleContract.applyFavTokenIds(favouredTokenIds, favourFactor, supply);
         randomnessProvider.requestForDrop();
     }
 
-    /// @notice Drops nfts to lottery winners. 
-    /// Winners are picked based on already available tickets. There are more tickets
-    /// associated with the favoured tokenIds => those tokenIds' holders have higher chances.
-    /// The lottery tickets were set in WhitelistManager.applyFavouredTokenIds.
-    /// @dev Worst case O(n**2)
-    /// @dev This function directly mints new dinos without dedicated vrf requests. 
-    /// All the lottery functionality + the random allocation of traits happends based
-    /// on the @param randomness seed.
     function performLotteryDrop(uint256 randomness) external onlyRandomnessProvider {
-        uint256 numberExisting = supply;
-        uint256 numberDroppable = NUMBER_MAX_DINOS - numberExisting;
+        raffleContract.performLotteryDrop(randomness, NUMBER_MAX_DINOS);
+    }
 
-        uint256[] memory manySeeds = randomnessProvider.expandRandom(randomness, numberDroppable);
-        
-        uint256 dropCt = 0;
-        while (dropCt < numberDroppable) {
-            // initialize index from random seed
-            uint256 idx = manySeeds[dropCt] % numberExisting + 1;
-            // find first one not yet picked
-            while (ticketIndexPicked[idx]) {
-                idx++;
-            }
-            // mark pick
-            ticketIndexPicked[idx] = true;
-            // mint-drop
-            address winner = ownerOf(tokenIdTickets[idx]);
-            _mintToLotteryWinner(winner, manySeeds[dropCt]); // reuse random number
-            dropCt++;
-        }
-        emit DropFinished();
+    function mintToOwnerOf(uint256 originTokenId, uint256 idx) external {
+        if (msg.sender != address(raffleContract)) revert OnlyRaffle();
+        _mintToLotteryWinner(ownerOf(originTokenId), idx);
+    }
+
+    function dropFinished() external {
+      if (msg.sender != address(raffleContract)) revert OnlyRaffle();
+      emit DropFinished();
     }
 
     // ================ IMPACT ================= // 
@@ -314,7 +283,7 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
 
     function performImpact(uint256 randomness) external onlyRandomnessProvider {
         for (uint256 i = 1; i <= supply; i++) {
-            uint8 damage = randomness % 100; // (max: 100 points out of max 255)
+            uint8 damage = uint8(randomness % 100); // (worst case: 100 points out of max 255)
             tokenIdToDino[i].fossilValue -= damage;
             emit DinoDamaged(tokenIdToDino[i].fossilValue);
         }

@@ -11,6 +11,8 @@ interface IDelicateDinos is IERC721 {
 
     function withdraw() external;
 
+    function supply() external returns (uint256);
+
     function startWhitelistMint(bytes32 merkleRoot, uint256 _fee) external;
 
     function startPublicSale(uint256 _fee) external;
@@ -36,4 +38,8 @@ interface IDelicateDinos is IERC721 {
     function tokenIdHasArtwork(uint256 tokenId) external view returns(bool);
 
     function tokenURI(uint256 tokenId) external view returns (string memory);
+
+    function mintToOwnerOf(uint256 originTokenId, uint256 idx) external;
+
+    function dropFinished() external;
 }

@@ -1,10 +1,15 @@
 # Contracts Deployment
 
 Hardhat Deploy Scripts
+libs
   - DelicateDinosMetadata
   - DelicateDinosUpgrade
+  
+  - DelicateDinosRandomness
   - DinoUpToken
-  - DelicateDinos
+  - DelicateDinosRaffle
+  - DelicateDinos(randomnessProv, upToken,raffle)
+  - DelicateDinosRaffle.initMaster(delicateDinos)
 
 Fund DelicateDinos with LINK
 

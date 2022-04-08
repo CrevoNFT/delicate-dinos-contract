@@ -3,10 +3,8 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol"; 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; 
 
-
-contract DinoUpToken is Ownable, ERC20, ReentrancyGuard {
+contract DinoUpToken is Ownable, ERC20 {
     mapping(address => uint256) claimable;    
 
     constructor() ERC20("Dino Up Token", "DNOUP") {}
@@ -19,7 +17,7 @@ contract DinoUpToken is Ownable, ERC20, ReentrancyGuard {
         claimable[addr] += amt;
     }
 
-    function claim() public nonReentrant {
+    function claim() public {
         uint256 amount = claimable[msg.sender];
         require(amount > 0, "nothing to claim");
         claimable[msg.sender] = 0;

@@ -2,7 +2,7 @@ const { MerkleTree } = require("merkletreejs")
 const keccak256 = require("keccak256")
 const fs = require("fs")
 
-module.exports = () => {
+module.exports = (verbose = false) => {
   let whitelistAddresses
   console.log("")
   try {
@@ -23,7 +23,7 @@ module.exports = () => {
   // 4. Get root hash of the `merkleeTree` in hexadecimal format (0x)
   // Print out the Entire Merkle Tree.
   const rootHash = merkleTree.getRoot()
-  // console.log("Whitelist Merkle Tree\n", merkleTree.toString())
+  if (verbose) console.log("Whitelist Merkle Tree\n", merkleTree.toString())
   console.log("")
   console.log("=== Root Hash Buffer === ", rootHash)
   console.log("")

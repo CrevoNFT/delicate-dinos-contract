@@ -6,13 +6,10 @@ import "../DelicateDinos.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 contract MockDelicateDinos is DelicateDinos {
-    constructor(address _vrfCoordinator,
-        address _link,
-        bytes32 _keyHash,
-        uint256 _fee,
+    constructor(address _randomnessProvider,
+        address _raffleContract,
         address _dinoUpToken
-    ) DelicateDinos(_vrfCoordinator, _link, _keyHash, _fee, _dinoUpToken) {}
-
+    ) DelicateDinos(_randomnessProvider, _raffleContract, _dinoUpToken) {}
 
     function isWhitelisted(address a, bytes32 merkleRoot, bytes32[] calldata _merkleProof) public view returns (bool) {
         bytes32 leaf = keccak256(abi.encodePacked(a));
