@@ -17,6 +17,7 @@ contract DelicateDinosRandomness is VRFConsumerBase, Ownable {
 
   event ReturnedRandomness(uint256 randomNumber);
   bytes32 lotteryRequestId;
+  bytes32 impactRequestId;
 
   error NotEnoughLink();
 
@@ -50,6 +51,11 @@ contract DelicateDinosRandomness is VRFConsumerBase, Ownable {
       return requestRandomness(keyHash, vrfFee);
   }
 
+  /// @notice request for a randomness seed to use in the impact simpulation
+  function requestForImpact() external onlyOwner {
+      impactRequestId = getRandomNumber();
+  }
+
   /**
   * Callback function used by VRF Coordinator
   */
@@ -57,6 +63,8 @@ contract DelicateDinosRandomness is VRFConsumerBase, Ownable {
       emit ReturnedRandomness(randomness);
       if (requestId == lotteryRequestId) {
           delicateDinosContract.performLotteryDrop(randomness);
+      } else if (requestId == impactRequestId) {
+          delicateDinosContract.performImpact(randomness);
       } else {
           delicateDinosContract.finalizeMintDino(requestId, randomness);
       }

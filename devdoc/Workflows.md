@@ -1,4 +1,4 @@
-=============== Deployment
+# Contracts Deployment
 
 Hardhat Deploy Scripts
   - DelicateDinosMetadata
@@ -8,65 +8,92 @@ Hardhat Deploy Scripts
 
 Fund DelicateDinos with LINK
 
+# Minting Controls
 
-----------
-startPublicSale()
-fee 0.01 MATIC = 10000000000000000
+In the contracts repo, run
 
----------- 
+- `yarn close-minting --contract ...`
+- `yarn open-whitelist --contract ...(address)... --fee ...(MATIC amount)...`
+- `yarn open-public-sale --contract ...(address)... --fee ...(MATIC amount)...`
+- `yarn drop-dinos --contract ...`
+- `yarn open-drop-claim --contract ...`
 
+# Prepare Whitelisted Minting
 
-=============== Minting
+CONTRACTS (so that Dinos Contract knows who is whitelisted and allows mintWhitelisted() to be called)
+- update `whitelist/whitelist.json`
+- run `yarn open-whitelist`
+  
+FRONTEND (so that mint page recognizes whitelisted addresses and provides a proof on calling contract.mintWhitelisted()):
+- update `src/whitelist/whitelist.json`
+- redeploy frontend
 
-WEB UI
-  - Mint Page has a form: 
-    - name
-    - mint button
-      - (disabled if would revert)
-        - not whitelisted
-        - not enough matic to pay
-        - ...
-    - warning
-      - if not whitelisted 
-      - if not enough matic to pay
-      - ...
+# Minting WEB UI
 
-  - Claiming: My Own Page 
-    - any claim-bearing token is displayed accordingly (tokenIdCanClaim(tokenId))
-    - button to perform the claim
-      - disabled if not enough gas
+## Mint Page has a form: 
+- name
+- mint button
+  - (disabled if would revert)
+    - not whitelisted
+    - not enough matic to pay
+    - ...
+- warning
+  - if not whitelisted 
+  - if not enough matic to pay
+  - ...
 
------ Whitelist / PublicSale
+## Public Sale has a form:
+- name
+- mint button
+  - (disabled if would revert)
+    - not enough matic to pay
+- warning
+  - if not enough matic to pay
+  
+## Claiming: My Own Page 
+- any claim-bearing token is displayed accordingly (tokenIdCanClaim(tokenId))
+- button to perform the claim
+  - disabled if not enough gas
 
-ONCHAIN :
+# ARTWORK updates on Whitelist / PublicSale / Claim Dropped
+
+## On-Chain 
 - mintDino(), mintDino(), ...
 
-OFFCHAIN : 
+## Off-Chain 
 - read mint events (transfer from 0 address), read ArtworkSet() events => diff set needs artwork
 - for all tokenIds in diff set, **create metadata**
     - read contract traits
       - create artwork accordingly
       - upload artwork to IPFS => get newBaseUri (artwork directory uri)  
 
-ONCHAIN : 
+## On-Chain
 - for all tokenIds in diff set
   - updateArtwork(tokenId, newBaseUri)
+  
+TODO: write script for this ^ ^ ^
 
 
-============== Upgrade
+# Upgrade Dino: WEB UI
 
-- owner can change any trait, even the name
+## Traits (pre-impact)
+- owner can change any trait
 - only teeth / skin will affect dino's resistance to impact
 
-Pay with DNOG Token
+Pay with DNOUP Token
 
-ONCHAIN
-- metadata is updated
+`dnoUpTokenContract.approve(dinosContract.address, dnoUpTokenAmount);`
+`dinosContract.upgradeTraits(tokenId, teethLengthDelta, skinThicknessDelta, dnoUpTokenAmount);`
+
+## Name (post-impact)
+- only once possible, after impact
+
+`dinosContract.setName("FunkyName77")`
 
 
-============= IMPACT
+# Impact
 
-- impact events are emitted (how much the health was affected)
+- impact events are emitted by Dinos Contract (how much the health was affected)
 
 - retrieve all, sort by max, take first n
   - drop 1 asteroid to each

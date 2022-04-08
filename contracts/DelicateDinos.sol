@@ -56,6 +56,7 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
 
     event DropFinished();
     event ArtworkSet(uint256 tokenId);
+    event DinoDamaged(uint8 updatedFossilValue);
 
     enum MintMode {
         NOT_SET,
@@ -303,5 +304,19 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
             dropCt++;
         }
         emit DropFinished();
+    }
+
+    // ================ IMPACT ================= // 
+
+    function impact() public onlyOwner {
+        randomnessProvider.requestForImpact();
+    }
+
+    function performImpact(uint256 randomness) external onlyRandomnessProvider {
+        for (uint256 i = 1; i <= supply; i++) {
+            uint8 damage = randomness % 100; // (max: 100 points out of max 255)
+            tokenIdToDino[i].fossilValue -= damage;
+            emit DinoDamaged(tokenIdToDino[i].fossilValue);
+        }
     }
 }
