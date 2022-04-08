@@ -44,7 +44,7 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
         uint8 skinThickness;
     }
 
-    uint256 public mintIndex; // inc on mint
+    uint256 public supply; // inc on mint
     mapping(uint256 => Dino) public tokenIdToDino;
     mapping(uint256 => bool) public tokenIdHasArtwork;
     mapping(uint256 => bytes32) public tokenIdToMintRequestId;
@@ -54,6 +54,7 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
     string private _ourBaseURI;
     string public constant PLACEHOLDER_IMAGE_URL = "ipfs://QmVg9ZSr3dL8C8Qcm1C8v51xUqhQYGX4NarRkKGsJXJiLs";
 
+    event DropFinished();
     event ArtworkSet(uint256 tokenId);
 
     enum MintMode {
@@ -157,8 +158,8 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
 
     function _requestMintDino(address addr, string memory name) private {
         bytes32 reqId = randomnessProvider.getRandomNumber();
-        mintIndex = mintIndex + 1;
-        uint256 newTokenId = mintIndex;
+        supply = supply + 1;
+        uint256 newTokenId = supply;
         mintRequest[reqId] = MintRequest(addr, name, newTokenId);
         tokenIdToMintRequestId[newTokenId] = reqId;
     }
@@ -192,8 +193,8 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
     }
 
     function _mintToLotteryWinner(address winner, uint256 randomness) private {
-        mintIndex = mintIndex + 1;
-        uint256 newTokenId = mintIndex;
+        supply = supply + 1;
+        uint256 newTokenId = supply;
         uint256[] memory twoValues = randomnessProvider.expandRandom(randomness, 2);
         uint8 teethLength = uint8(twoValues[0] % (2**8));
         uint8 skinThickness = uint8(twoValues[1] % (2**8)); 
@@ -264,12 +265,12 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
 
     // ============= Drop Lottery ============ //
 
-    function applyFavouredTokenIds(
-        uint16[] calldata favouredTokenIds,
-        uint8 favourFactor,
-        uint256 supply
-    ) external override onlyRandomnessProvider {
-        this.applyFavouredTokenIds(favouredTokenIds, favourFactor, supply);
+    /// @notice apply favoured token IDs and initiate the lottery drop
+    /// @param favouredTokenIds array of token ids which are favoured in the lottery
+    /// @param favourFactor how many tickets a favoured Token Id gets in the lottery
+    function startDrop(uint16[] calldata favouredTokenIds, uint8 favourFactor) external onlyOwner {
+        _applyFavTokenIds(favouredTokenIds, favourFactor, supply);
+        randomnessProvider.requestForDrop();
     }
 
     /// @notice Drops nfts to lottery winners. 
@@ -281,7 +282,7 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
     /// All the lottery functionality + the random allocation of traits happends based
     /// on the @param randomness seed.
     function performLotteryDrop(uint256 randomness) external onlyRandomnessProvider {
-        uint256 numberExisting = mintIndex;
+        uint256 numberExisting = supply;
         uint256 numberDroppable = NUMBER_MAX_DINOS - numberExisting;
 
         uint256[] memory manySeeds = randomnessProvider.expandRandom(randomness, numberDroppable);
@@ -301,5 +302,6 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager, ReentrancyGuard {
             _mintToLotteryWinner(winner, manySeeds[dropCt]); // reuse random number
             dropCt++;
         }
+        emit DropFinished();
     }
 }

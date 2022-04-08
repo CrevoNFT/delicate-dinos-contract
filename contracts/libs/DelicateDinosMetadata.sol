@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 library DelicateDinosMetadata {
 
   function dinoURI(uint256 tokenId, string memory imageUrl, uint8 teethLength, uint8 skinThickness, string memory name)
-        external
+        public
         view
         returns (string memory)
     {

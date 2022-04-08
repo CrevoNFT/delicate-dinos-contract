@@ -10,7 +10,7 @@ library DelicateDinosUpgrade {
     uint8 currentSkinThickness,
     uint8 teethLengthDelta,
     uint8 skinThicknessDelta
-  ) external pure returns (uint256){
+  ) public pure returns (uint256){
     return 1*1e18;
   }
 }

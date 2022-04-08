@@ -5,10 +5,11 @@
   "scripts": {
     "test": "rm -rf foundry/src/contracts && cp -R contracts foundry/src/contracts && cd foundry && forge test",
     "verify-all": "node scripts/verify.js",
-    "close-minting": "",
-    "open-whitelist": "",
-    "open-public-sale": "",
-    "open-drop-minting": ""
+    "close-minting": "npx hardhat stop-minting",
+    "open-whitelist": "npx hardhat open-whitelist-sale",
+    "open-public-sale": "npx hardhat open-public-sale",
+    "drop-dinos": "npx hardhat drop-dinos",
+    "open-drop-claim": "npx hardhat open-drop-mint"
   },
   "license": "MIT",
   "devDependencies": {
@@ -25,7 +26,8 @@
     "prettier": "^2.4.1",
     "prettier-plugin-solidity": "^1.0.0-beta.19",
     "solhint": "^3.3.6",
-    "solidity-coverage": "^0.7.13"
+    "solidity-coverage": "^0.7.13",
+    "keccak256": "^1.0.6"
   },
   "dependencies": {
     "@appliedblockchain/chainlink-contracts": "0.0.4",
@@ -35,7 +37,8 @@
     "@chainlink/token": "^1.1.0",
     "@openzeppelin/contracts": "^4.5.0",
     "babel-eslint": "^10.1.0",
-    "dotenv": "^10.0.0"
+    "dotenv": "^10.0.0",
+    "merkletreejs": "^0.2.27"
   },
   "mocha": {
     "timeout": 10000000

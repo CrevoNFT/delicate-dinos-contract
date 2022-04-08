@@ -25,9 +25,9 @@ contract DelicateDinosIntegrationTest is DelicateDinosBaseIntegrationTest {
   function testCanMintWhitelisted() external {
     uint256 _fee = 1e18;
     delicateDinos.startWhitelistMint(MERKLE_ROOT, _fee);
-    assertTrue(delicateDinos.mintIndex() == 0);
+    assertTrue(delicateDinos.supply() == 0);
     delicateDinos.mintDinoWhitelisted{value: _fee}(address(this), "Firsty", merkleProof);
-    assertTrue(delicateDinos.mintIndex() == 1);
+    assertTrue(delicateDinos.supply() == 1);
     bytes32 requestId = delicateDinos.tokenIdToMintRequestId(1);
     _vrfRespondMint(RANDOM_NUMBER, requestId);
     assertTrue(delicateDinos.ownerOf(1) == address(this));
@@ -48,7 +48,7 @@ contract DelicateDinosIntegrationTest is DelicateDinosBaseIntegrationTest {
   function testCannotMintNonWhitelisted(address randomAddr) external {
     uint256 _fee = 1e18;
     delicateDinos.startWhitelistMint(MERKLE_ROOT, _fee);
-    assertTrue(delicateDinos.mintIndex() == 0);
+    assertTrue(delicateDinos.supply() == 0);
     HEVM.expectRevert(abi.encodeWithSelector(WhitelistManager.InvalidProof.selector));
     delicateDinos.mintDinoWhitelisted{value: _fee}(randomAddr, "Firsty", merkleProof);
   }
@@ -57,7 +57,7 @@ contract DelicateDinosIntegrationTest is DelicateDinosBaseIntegrationTest {
     uint256 _fee = 1e18;
     HEVM.assume(randomFee < _fee);
     delicateDinos.startWhitelistMint(MERKLE_ROOT, _fee);
-    assertTrue(delicateDinos.mintIndex() == 0);
+    assertTrue(delicateDinos.supply() == 0);
     HEVM.expectRevert(abi.encodeWithSelector(DelicateDinos.WrongMintFee.selector));
     delicateDinos.mintDinoWhitelisted{value: randomFee}(address(this), "Firsty", merkleProof);
   }

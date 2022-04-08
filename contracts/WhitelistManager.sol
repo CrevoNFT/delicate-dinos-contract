@@ -9,6 +9,9 @@ contract WhitelistManager {
   uint8 public round = 0;
 
   mapping(uint8 => mapping(address => bool)) public whitelistClaimed;
+
+  // FAVOURED IDs in LOTTERY
+  bool internal favouredTokenIdsSet = false;
   uint256[] internal tokenIdTickets;
 
   error AlreadyClaimed();
@@ -36,8 +39,8 @@ contract WhitelistManager {
   /// @param favouredTokenIds The ones that get several tickets in the lottery
   /// @param favourFactor How many tickets a favoured tokenId gets
   /// @param supply The total number of minted tokens
-  function applyFavouredTokenIds(uint16[] calldata favouredTokenIds, uint8 favourFactor, uint256 supply) external virtual {
-    if (uint256(favouredTokenIds[favouredTokenIds.length - 1]) > supply) revert MaxFavouredTokenId();
+  function _applyFavTokenIds(uint16[] calldata favouredTokenIds, uint8 favourFactor, uint256 supply) internal virtual {
+     if (uint256(favouredTokenIds[favouredTokenIds.length - 1]) > supply) revert MaxFavouredTokenId();
 
     uint256 tokenId = 1;
     uint256 idxFavoured = 0;
@@ -55,5 +58,6 @@ contract WhitelistManager {
       }
       tokenId++;
     } 
+    favouredTokenIdsSet = true;
   }
 }

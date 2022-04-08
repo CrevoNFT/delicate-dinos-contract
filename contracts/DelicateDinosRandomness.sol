@@ -39,12 +39,8 @@ contract DelicateDinosRandomness is VRFConsumerBase, Ownable {
     LINK.transfer(msg.sender, LINK.balanceOf(address(this)));
   }
 
-  /// @notice Favoured tokenIds are whitelisted. Each of them has 
-  /// a higher chance of winning in the lottery.
-  /// @param tokenIds array of token ids which are favoured in the lottery
-  function requestForDrop(uint16[] calldata tokenIds) external onlyOwner {
-      uint256 mintIdx = delicateDinosContract.mintIndex();
-      delicateDinosContract.applyFavouredTokenIds(tokenIds, FAVOURED_MULTIPLIER, mintIdx);
+  /// @notice request for a randomness seed to use in the drop lottery
+  function requestForDrop() external onlyOwner {
       lotteryRequestId = getRandomNumber();
   }
 
