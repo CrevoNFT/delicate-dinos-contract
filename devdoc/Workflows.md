@@ -86,17 +86,25 @@ Pay with DNOUP Token
 `dinosContract.upgradeTraits(tokenId, teethLengthDelta, skinThicknessDelta, dnoUpTokenAmount);`
 
 ## Name (post-impact)
-- only once possible, after impact
+- only once possible, after impact (bonus feature)
 
 `dinosContract.setName("FunkyName77")`
 
 
 # Impact
 
-- impact events are emitted by Dinos Contract (how much the health was affected)
+## Simulation for Dinos
+`yarn go-impact`
+- metadata is updated
+- artwork remains the same
+- impact events `DinoDamaged(uint8)` are emitted by Dinos Contract (how much the fossil value was affected)
 
-- retrieve all, sort by max, take first n
+- now, each dino's name can be updated (bonus feature)
+
+## Asteroids Drop
+- retrieve all DinoDamaged() events, sort by max, take first n
   - drop 1 asteroid to each
-  - holders of dinos have them automatically
+  - holders of dinos obtain them automatically without claiming
+    - we call the mint method in the asteroids contract for each dino holder individually (script)
 
 - the remaining asteroids are for whitelist / public sale

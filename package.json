@@ -9,7 +9,8 @@
     "open-whitelist": "npx hardhat open-whitelist-sale",
     "open-public-sale": "npx hardhat open-public-sale",
     "drop-dinos": "npx hardhat drop-dinos",
-    "open-drop-claim": "npx hardhat open-drop-mint"
+    "open-drop-claim": "npx hardhat open-drop-mint",
+    "go-impact": "npx hardhat go-impact"
   },
   "license": "MIT",
   "devDependencies": {
