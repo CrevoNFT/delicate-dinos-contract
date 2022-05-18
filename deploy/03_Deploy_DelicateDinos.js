@@ -2,7 +2,7 @@ const { networkConfig } = require("../helper-hardhat-config")
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
+module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy, get, log } = deployments
   const { deployer } = await getNamedAccounts()
 
@@ -25,7 +25,10 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   log("Delicate Dinos deployed")
 
   // set delicateDinos as master of randomness provider
-  const randomnessProvider = await get("delicateDinosRandomness")
+  const randomnessProvider = await ethers.getContractAt(
+    "DelicateDinosRandomness",
+    randomnessProviderAddress
+  )
   await randomnessProvider.initMaster(delicateDinos.address)
 
   // await sleep(15000)

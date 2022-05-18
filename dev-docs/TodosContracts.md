@@ -17,11 +17,13 @@ Test metadata display when name missing (opensea)
 
 -------- DEV
 
+setUpgraderContract() in collection contract
+
 Upgrader Contract
   - upgrades teeth or skin, uses token -> the higher the value, the more expensive the upgrade
 
 Impact Mechanics
   - impact distance: [1 .. 10]
-  - low distance => thick skin protects you
-  - high distance => large teeth protect you
+  - shock damage: low distance => thick skin protects you
+  - hunger damage: large teeth protect you
   - calculate damage, update metadata, emit event with damage taken

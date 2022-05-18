@@ -4,6 +4,7 @@ pragma solidity ^0.8.4;
 import "../../lib/ds-test/src/test.sol";
 import "../Hevm.sol";
 import "../contracts/mocks/MockDelicateDinos.sol";
+import "../contracts/mocks/MockDelicateDinosMinter.sol";
 import "../contracts/mocks/MockDinoUpToken.sol";
 import "../contracts/mocks/MockDelicateDinosRandomness.sol";
 import "../contracts/mocks/MockDelicateDinosRaffle.sol";
@@ -16,6 +17,7 @@ contract DelicateDinosBaseIntegrationTest is DSTest {
     Hevm internal constant HEVM = Hevm(HEVM_ADDRESS);
 
     MockDelicateDinos public delicateDinos;
+    MockDelicateDinosMinter public delicateDinosMinter;
     MockDinoUpToken public dinoUpToken;
     MockDelicateDinosRaffle public raffleContract;
     MockDelicateDinosRandomness public randomnessProvider;
@@ -48,6 +50,10 @@ contract DelicateDinosBaseIntegrationTest is DSTest {
             address(dinoUpToken)
         );
         randomnessProvider.initMaster(address(delicateDinos));
+
+        delicateDinosMinter = new MockDelicateDinosMinter(address(delicateDinos));
+        delicateDinos.setMinterContract(address(delicateDinosMinter));
+
         mockVRFOracle = new MockVRFOracle(
             address(delicateDinos.randomnessProvider()),
             address(vrfCoordinator)

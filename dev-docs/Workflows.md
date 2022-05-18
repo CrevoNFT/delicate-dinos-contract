@@ -13,6 +13,9 @@ libs
 
   - INIT: DelicateDinosRandomness.initMaster(delicateDinos)
 
+  - DelicateDinosMinter(delicateDinos)
+  - delicateDinos.setMinterContract(minter)
+
 Fund DelicateDinosRandomness with LINK
 
 # Minting Controls

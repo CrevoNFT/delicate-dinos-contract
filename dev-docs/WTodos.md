@@ -1,3 +1,9 @@
+Contract Core Logic
+
+- whitelist sale allows for multiple mints
+- "auction" as time-tiered public sale
+
+
 Contract Deployment
   - verification script
   - manage Polygon mainnet deployer account

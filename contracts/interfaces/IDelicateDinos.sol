@@ -42,4 +42,6 @@ interface IDelicateDinos is IERC721 {
     function mintToOwnerOf(uint256 originTokenId, uint256 idx) external;
 
     function dropFinished() external;
+
+    function requestMintDinos(address dinoOwner, string[] memory names) external;
 }

@@ -11,15 +11,13 @@ import "./libs/DelicateDinosUpgrade.sol";
 import "./libs/DelicateDinosMetadata.sol";
 
 /**
-@notice A collection of randomly generated Dinosaurs
+ @title A collection of randomly generated Dinosaurs
  *
- * All collection items receive their traits at mint time.
- * Traits are generated randomly via chainlink VRF.
- * The actual artwork is only generated after minting, based on the traits.
- * 
- * We use placeholder metadata for collection items that don't have metadata yet.
+ * @notice All collection items receive their traits at mint time. Traits are generated randomly via chainlink VRF.
+ * @notice The actual artwork is only generated after minting, based on the traits.
+ * @notice We use placeholder metadata for collection items that don't have metadata yet.
  */
-contract DelicateDinos is Ownable, ERC721, WhitelistManager {
+contract DelicateDinos is Ownable, ERC721 {
 
     IDelicateDinosRaffle public raffleContract;
     
@@ -28,8 +26,8 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager {
 
     struct MintRequest {
         address to;
-        string name;
-        uint256 tokenId;
+        string[] names;
+        uint256[] tokenIds;
     }
     mapping(bytes32 => MintRequest) mintRequest;
 
@@ -56,28 +54,19 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager {
     event ArtworkSet(uint256 tokenId);
     event DinoDamaged(uint8 updatedFossilValue);
 
-    enum MintMode {
-        NOT_SET,
-        WHITE_LIST,
-        PUBLIC_SALE,
-        DROP_CLAIM
-    }
-
-    MintMode public mintMode;
-    uint256 public mintFee = 0;
-    uint256 public lastDecoratedTokenId;
-
     bool renameUnlocked = false;
     mapping(uint256 => bool) public tokenIdHasRenamed;
 
+    uint256 public lastDecoratedTokenId;
+
+
     IDinoUpToken public dinoUpToken;
+
+    address public minterContract;
 
     // ----------- errors
     
     error WithdrawFailed();
-    error NoWhitelistMint();
-    error NoPublicSale();
-    error WrongMintFee();
     error NotTokenOwner();
     error NotOwnerOfBaseToken();
     error NothingToClaimForTokenId();
@@ -88,9 +77,14 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager {
     error RenameLocked();
     error HasRenamedAlready();
     error InsufficientAllowanceToUpgrade();
+    error OnlyMinterContract();
 
     modifier onlyRandomnessProvider {
         if (msg.sender != address(randomnessProvider)) revert OnlyRandomnessProvider();
+        _;
+    }
+    modifier onlyMinterContract {
+        if (msg.sender != minterContract) revert OnlyMinterContract();
         _;
     }
 
@@ -112,54 +106,34 @@ contract DelicateDinos is Ownable, ERC721, WhitelistManager {
 
     // ====================== MINTING ==================== //
 
-    function stopMint() public onlyOwner {
-        mintMode = MintMode.NOT_SET;
+    function setMinterContract(address _minter) public onlyOwner {
+        minterContract = _minter;
     }
 
-    function startWhitelistMint(bytes32 merkleRoot, uint256 _fee) public onlyOwner {
-        resetWhitelist(merkleRoot);
-        mintFee = _fee;
-        mintMode = MintMode.WHITE_LIST;
-    }
-
-    function startPublicSale(uint256 _fee) public onlyOwner {
-        mintFee = _fee;
-        mintMode = MintMode.PUBLIC_SALE;
-    }
-
-    function startDropClaim() public onlyOwner {
-        mintMode = MintMode.DROP_CLAIM;
-    }
-
-    function mintDinoWhitelisted(address addr, string memory name, bytes32[] calldata proof) public payable {
-        if (mintMode != MintMode.WHITE_LIST) revert NoWhitelistMint();
-        if (msg.value != mintFee) revert WrongMintFee();
-        checkWhitelisted(addr, proof);
-        _requestMintDino(addr, name);
-    }
-
-    function mintDinoPublicSale(address addr, string memory name) public payable {
-        if (mintMode != MintMode.PUBLIC_SALE) revert NoPublicSale();
-        if (msg.value != mintFee) revert WrongMintFee();
-        _requestMintDino(addr, name);
-    }
-
-    function _requestMintDino(address addr, string memory name) private {
+    /// @notice Called by minter contract to initiate minting for given account. Several Dinos can be minted at once.
+    /// @param names are provided to assign to minted dinos. From this array's length we infer the number of Dinos to be minted.
+    function requestMintDinos(address addr, string[] memory names) external onlyMinterContract {
         bytes32 reqId = randomnessProvider.getRandomNumber();
-        supply = supply + 1;
-        uint256 newTokenId = supply;
-        mintRequest[reqId] = MintRequest(addr, name, newTokenId);
-        tokenIdToMintRequestId[newTokenId] = reqId;
+        uint256[] memory newTokenIds = new uint256[](names.length);
+        for (uint256 i = 0; i < names.length; i++) {
+            supply++;
+            newTokenIds[i] = supply;
+            tokenIdToMintRequestId[newTokenIds[i]] = reqId;
+        }
+        mintRequest[reqId] = MintRequest(addr, names, newTokenIds);
     }
 
     function finalizeMintDino(bytes32 requestId, uint256 randomness) external onlyRandomnessProvider {
         address to = mintRequest[requestId].to;
-        uint256 _tokenId = mintRequest[requestId].tokenId;
-        string memory name = mintRequest[requestId].name;
-        uint256[] memory twoValues = randomnessProvider.expandRandom(randomness, 2);
-        uint8 teethLength = uint8(twoValues[0] % (2**8));
-        uint8 skinThickness = uint8(twoValues[1] % (2**8)); 
-        _mintDinoWithTraits(to, _tokenId, teethLength, skinThickness, name);
+        uint256[] memory _tokenIds = mintRequest[requestId].tokenIds;
+        string[] memory _names = mintRequest[requestId].names;
+        uint256[] memory dinoSeeds = randomnessProvider.expandRandom(randomness, _names.length);
+        for (uint i = 0; i < _names.length; i++) {
+            uint256[] memory traitSeeds = randomnessProvider.expandRandom(dinoSeeds[i], 2);
+            uint8 teethLength = uint8(traitSeeds[0] % (2**8));
+            uint8 skinThickness = uint8(traitSeeds[1] % (2**8)); 
+            _mintDinoWithTraits(to, _tokenIds[i], teethLength, skinThickness, _names[i]);
+        }
     }
 
     function _mintDinoWithTraits(
