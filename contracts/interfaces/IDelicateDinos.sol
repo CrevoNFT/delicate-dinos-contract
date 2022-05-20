@@ -15,9 +15,7 @@ interface IDelicateDinos is IERC721 {
 
     function startWhitelistMint(bytes32 merkleRoot, uint256 _fee) external;
 
-    function startPublicSale(uint256 _fee) external;
-
-    function startDropClaim() external;
+    function startPublicSale(uint256 _initialSalePrice, uint256 _minSalePrice, uint256 _salePriceDecrement, uint256 _saleTierDurationInHours, uint256 _maxMint) external;
 
     function stopMint(uint256 saleStateId) external;
 

@@ -4,6 +4,9 @@ Contract Core Logic
 - "auction" as time-tiered public sale
 
 
+- upgrades: pay increasingly more for diffs to higher (better) stats
+
+
 Contract Deployment
   - verification script
   - manage Polygon mainnet deployer account

@@ -6,7 +6,7 @@ task(
 )
   .addParam("contract", "The address of the MINTER contract")
   .addParam("fee", "The minting fee (MATIC)")
-  .addParam("max", "The max number of Dinos mintable per whitelisted address")
+  .addParam("maxMintable", "The max number of Dinos mintable per whitelisted address")
   .setAction(async ({ contract, fee, maxMintable }, { ethers }) => {
     const rootHash = getRootHash()
     const dinosContract = await ethers.getContractAt("DelicateDinosMinter", contract)
